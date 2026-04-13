@@ -1,0 +1,68 @@
+# Compiled binaries
+bin/
+obj/
+
+# Visual Studio temporary files
+.vs/
+.vscode/
+*.user
+*.userprefs
+*.sln.iml
+
+# IDE files
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+dist/
+RELEASE/
+*.dll
+*.exe
+*.pdb
+*.log
+
+# Build tools
+*.ps1
+
+# Media assets
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.bmp
+*.ico
+!GameData/Stencil/Resources/Stencil.png
+
+# Debug logging
+Stencil/debug.txt
+KSP/Stencil/debug.txt
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+*.lnk
+
+# NuGet
+packages/
+*.nupkg
+.nuget/
+
+# User-specific files
+appsettings.local.json
+local.settings.json
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Keep the GameData structure
+!GameData/
+!GameData/Stencil/
+!GameData/Stencil/Plugins/
+!GameData/Stencil/Resources/
+Stencil.netkan
