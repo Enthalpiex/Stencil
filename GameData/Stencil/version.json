@@ -5,7 +5,7 @@
   "VERSION": {
     "MAJOR": 0,
     "MINOR": 1,
-    "PATCH": 4,
+    "PATCH": 5,
     "BUILD": 0
   },
   "KSP_VERSION": {
@@ -18,7 +18,7 @@
     "MINOR": 12,
     "PATCH": 99
   },
-  "DOWNLOAD": "https://spacedock.info/mod/4203/Stencil/download/0.1.4",
+  "DOWNLOAD": "https://spacedock.info/mod/4203/Stencil/download/0.1.5",
   "GITHUB": {
     "USERNAME": "Entropiex",
     "REPOSITORY": "Stencil",

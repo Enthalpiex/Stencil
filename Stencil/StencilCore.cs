@@ -91,6 +91,7 @@ namespace Stencil
             RenderTextures = true;
             AffectsPhysics = false;
             Transform = new ReferenceModelTransform();
+            Transform.SetScale(new Float3(0.02f, 0.02f, 0.02f));
             Mesh = mesh ?? new ReferenceMeshData(new Float3[0], new int[0]);
             DisplayMode = ReferenceDisplayMode.Mixed;
             TintColor = Float4.White;
@@ -105,7 +106,6 @@ namespace Stencil
             if (format == ReferenceModelFormat.Stl)
             {
                 Transform.SetRotation(new Float3(-90f, 0f, 0f));
-                Transform.SetScale(new Float3(0.1f, 0.1f, 0.1f));
             }
         }
 
@@ -361,6 +361,127 @@ namespace Stencil
                 { ".stl", ReferenceModelFormat.Stl }
             };
 
+        private sealed class ObjMeshImporter
+        {
+            private struct FaceVertex
+            {
+                public int VertexIndex;
+            }
+
+            public ReferenceMeshData Import(string localPath)
+            {
+                var rawVertices = new List<Float3>();
+                var outVertices = new List<Float3>();
+                var outTriangles = new List<int>();
+
+                using (var reader = new StreamReader(localPath))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        line = line.Trim();
+                        if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
+                        {
+                            continue;
+                        }
+
+                        if (line.StartsWith("v ", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length < 4)
+                            {
+                                continue;
+                            }
+
+                            rawVertices.Add(new Float3(
+                                ParseObjFloat(parts[1]),
+                                ParseObjFloat(parts[2]),
+                                ParseObjFloat(parts[3])));
+                            continue;
+                        }
+
+                        if (!line.StartsWith("f ", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        var faceParts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (faceParts.Length < 4)
+                        {
+                            continue;
+                        }
+
+                        var face = new List<FaceVertex>();
+                        for (var i = 1; i < faceParts.Length; i++)
+                        {
+                            var fv = ParseFaceVertex(faceParts[i], rawVertices.Count);
+                            if (fv.VertexIndex < 0 || fv.VertexIndex >= rawVertices.Count)
+                            {
+                                face.Clear();
+                                break;
+                            }
+
+                            face.Add(fv);
+                        }
+
+                        if (face.Count < 3)
+                        {
+                            continue;
+                        }
+
+                        // Triangulate polygon as a fan: (0, i, i+1)
+                        for (var i = 1; i + 1 < face.Count; i++)
+                        {
+                            AddFaceVertex(face[0], rawVertices, outVertices, outTriangles);
+                            AddFaceVertex(face[i], rawVertices, outVertices, outTriangles);
+                            AddFaceVertex(face[i + 1], rawVertices, outVertices, outTriangles);
+                        }
+                    }
+                }
+
+                return new ReferenceMeshData(outVertices.ToArray(), outTriangles.ToArray());
+            }
+
+            private static FaceVertex ParseFaceVertex(string token, int vertexCount)
+            {
+                var slash = token.IndexOf('/');
+                var vertexToken = slash >= 0 ? token.Substring(0, slash) : token;
+
+                int index;
+                if (!int.TryParse(vertexToken, NumberStyles.Integer, CultureInfo.InvariantCulture, out index))
+                {
+                    return new FaceVertex { VertexIndex = -1 };
+                }
+
+                // OBJ uses 1-based indices; negative indices are relative to the end.
+                if (index > 0)
+                {
+                    index -= 1;
+                }
+                else if (index < 0)
+                {
+                    index = vertexCount + index;
+                }
+
+                return new FaceVertex { VertexIndex = index };
+            }
+
+            private static void AddFaceVertex(
+                FaceVertex fv,
+                IList<Float3> rawVertices,
+                IList<Float3> outVertices,
+                IList<int> outTriangles)
+            {
+                outVertices.Add(rawVertices[fv.VertexIndex]);
+                outTriangles.Add(outVertices.Count - 1);
+            }
+
+            private static float ParseObjFloat(string value)
+            {
+                return float.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
+            }
+        }
+
         public ReferenceModel Import(string localPath)
         {
             if (string.IsNullOrWhiteSpace(localPath))
@@ -380,10 +501,26 @@ namespace Stencil
                 throw new NotSupportedException("Unsupported model format: " + ext);
             }
 
-            var mesh = new ReferenceMeshData(new Float3[0], new int[0]);
-            if (format == ReferenceModelFormat.Stl)
+            ReferenceMeshData mesh;
+            switch (format)
             {
-                mesh = new StlMeshImporter().Import(localPath);
+                case ReferenceModelFormat.Stl:
+                    mesh = new StlMeshImporter().Import(localPath);
+                    break;
+                case ReferenceModelFormat.Obj:
+                    mesh = new ObjMeshImporter().Import(localPath);
+                    break;
+                case ReferenceModelFormat.Fbx:
+                case ReferenceModelFormat.Dae:
+                    throw new NotSupportedException(
+                        "FBX/DAE import is not implemented in this build yet. Please convert to STL or OBJ.");
+                default:
+                    throw new NotSupportedException("Unsupported model format: " + ext);
+            }
+
+            if (!mesh.HasGeometry)
+            {
+                throw new InvalidDataException("No mesh geometry found in file: " + Path.GetFileName(localPath));
             }
 
             return new ReferenceModel(localPath, format, mesh);

@@ -68,6 +68,11 @@ namespace Stencil
 
         private bool _inputLocked;
 
+        private static string T(string key, params object[] args)
+        {
+            return StencilI18n.Tr(key, args);
+        }
+
         private void Start()
         {
             _service = new EditorReferenceModelService();
@@ -77,7 +82,7 @@ namespace Stencil
             _runtime.Start();
             _iconProvider = new StencilIconProvider();
 
-            _windowRect = new Rect(260f, 120f, 620f, 700f);
+            _windowRect = new Rect(260f, 120f, 620f, 620f);
             _windowId = Guid.NewGuid().GetHashCode();
             _pickerRect = new Rect(900f, 120f, 560f, 460f);
             _pickerWindowId = Guid.NewGuid().GetHashCode();
@@ -88,11 +93,11 @@ namespace Stencil
             _state.Hide();
 
             _opacityInput = "0.35";
-            _scaleInput = "0.1";
+            _scaleInput = "0.02";
             _moveStepInput = "0.25";
             _rotateStepInput = "15";
             _colorHexInput = "#FFFFFF";
-            _titleText = "Stencil v" + GetDisplayVersion();
+            _titleText = "Stencil v" + GetDisplayVersion() + " Beta";
 
             _sliceApx = "0";
             _sliceApy = "0";
@@ -125,7 +130,7 @@ namespace Stencil
 
             if (_isPickerVisible)
             {
-                _pickerRect = GUILayout.Window(_pickerWindowId, _pickerRect, DrawPickerWindow, "Choose Model File", _windowStyle);
+                _pickerRect = GUILayout.Window(_pickerWindowId, _pickerRect, DrawPickerWindow, T("window.chooseModel"), _windowStyle);
             }
 
             if (_isSliceVisible)
@@ -211,21 +216,21 @@ namespace Stencil
             EnsureStyles();
 
             GUILayout.BeginVertical();
-            _mainScroll = GUILayout.BeginScrollView(_mainScroll, GUILayout.Height(Mathf.Min(Screen.height * 0.72f, 640f)));
+            _mainScroll = GUILayout.BeginScrollView(_mainScroll, GUILayout.ExpandHeight(true));
 
             GUILayout.Label(_titleText, _labelStyle);
 
-            GUILayout.Label("Model file (.stl):", _labelStyle);
-            GUILayout.Label(string.IsNullOrWhiteSpace(_pathInput) ? "No file selected." : Path.GetFileName(_pathInput), _labelStyle);
+            GUILayout.Label(T("label.importFormats"), _labelStyle);
+            GUILayout.Label(string.IsNullOrWhiteSpace(_pathInput) ? T("label.noFileSelected") : Path.GetFileName(_pathInput), _labelStyle);
 
-            if (GUILayout.Button("Choose File", _buttonStyle))
+            if (GUILayout.Button(T("button.chooseFile"), _buttonStyle))
             {
                 RefreshPickerFiles();
                 _isPickerVisible = true;
             }
 
             GUI.enabled = !string.IsNullOrWhiteSpace(_state.PendingImportPath);
-            if (GUILayout.Button("Import", _buttonStyle))
+            if (GUILayout.Button(T("button.import"), _buttonStyle))
             {
                 Guid importedId;
                 string error;
@@ -234,7 +239,7 @@ namespace Stencil
             GUI.enabled = true;
 
             GUILayout.Space(8f);
-            GUILayout.Label("Models:", _labelStyle);
+            GUILayout.Label(T("label.models"), _labelStyle);
             var snapshot = _controller.GetSnapshot();
             for (var i = 0; i < snapshot.Models.Length; i++)
             {
@@ -247,12 +252,12 @@ namespace Stencil
             }
 
             GUILayout.Space(8f);
-            if (GUILayout.Button("Remove Selected", _buttonStyle))
+            if (GUILayout.Button(T("button.removeSelected"), _buttonStyle))
             {
                 _controller.RemoveSelected();
             }
 
-            if (GUILayout.Button("Remove All", _buttonStyle))
+            if (GUILayout.Button(T("button.removeAll"), _buttonStyle))
             {
                 _controller.RemoveAll();
             }
@@ -343,9 +348,9 @@ namespace Stencil
             }
 
             GUILayout.Space(8f);
-            GUILayout.Label("Status: " + _state.LastStatusMessage, _labelStyle);
+            GUILayout.Label(T("label.status", _state.LastStatusMessage), _labelStyle);
 
-            if (GUILayout.Button("Close", _buttonStyle))
+            if (GUILayout.Button(T("button.close"), _buttonStyle))
             {
                 _state.Hide();
                 _isPickerVisible = false;
@@ -368,9 +373,10 @@ namespace Stencil
             GUILayout.BeginVertical();
 
             var folder = ModAssets.GetModelScanFolderPath();
-            GUILayout.Label("Folder: " + folder, _labelStyle);
+            GUILayout.Label(T("label.folder", folder), _labelStyle);
+            GUILayout.Label(T("label.tipPutFiles"), _labelStyle);
 
-            if (GUILayout.Button("Refresh", _buttonStyle))
+            if (GUILayout.Button(T("button.refresh"), _buttonStyle))
             {
                 RefreshPickerFiles();
             }
@@ -378,7 +384,7 @@ namespace Stencil
             _pickerScroll = GUILayout.BeginScrollView(_pickerScroll, GUILayout.Height(280f));
             if (_pickerFiles.Length == 0)
             {
-                GUILayout.Label("No supported files found (.stl/.obj/.fbx/.dae).", _labelStyle);
+                GUILayout.Label(T("label.noSupportedFiles"), _labelStyle);
             }
             else
             {
@@ -389,14 +395,14 @@ namespace Stencil
                     {
                         _pathInput = filePath;
                         _state.PendingImportPath = filePath;
-                        _state.SetStatus("Selected: " + Path.GetFileName(filePath));
+                        _state.SetStatus(T("status.selected", Path.GetFileName(filePath)));
                         _isPickerVisible = false;
                     }
                 }
             }
             GUILayout.EndScrollView();
 
-            if (GUILayout.Button("Close", _buttonStyle))
+            if (GUILayout.Button(T("button.close"), _buttonStyle))
             {
                 _isPickerVisible = false;
             }
@@ -415,9 +421,9 @@ namespace Stencil
             var selected = _controller.GetSelectedModelOrNull();
             if (selected == null)
             {
-                GUILayout.Label("Select a model first.", _labelStyle);
+                GUILayout.Label(T("label.selectModelFirst"), _labelStyle);
                 GUILayout.EndScrollView();
-                if (GUILayout.Button("Close", _buttonStyle))
+                if (GUILayout.Button(T("button.close"), _buttonStyle))
                 {
                     _isSliceVisible = false;
                 }
@@ -452,7 +458,7 @@ namespace Stencil
 
             GUILayout.EndScrollView();
 
-            if (GUILayout.Button("Close", _buttonStyle))
+            if (GUILayout.Button(T("button.close"), _buttonStyle))
             {
                 _isSliceVisible = false;
             }
@@ -624,7 +630,7 @@ namespace Stencil
             Float4 color;
             if (!TryParseHexColor(_colorHexInput, out color))
             {
-                _state.SetStatus("Invalid color. Use #RRGGBB or #RRGGBBAA.");
+                _state.SetStatus(T("status.invalidColor"));
                 return;
             }
 
@@ -885,7 +891,7 @@ namespace Stencil
             var folder = ModAssets.GetModelScanFolderPath();
             Directory.CreateDirectory(folder);
 
-            var patterns = new[] { "*.stl", "*.obj", "*.fbx", "*.dae" };
+            var patterns = new[] { "*.stl", "*.obj" };
             var files = new List<string>();
             for (var i = 0; i < patterns.Length; i++)
             {
@@ -899,11 +905,11 @@ namespace Stencil
             _pickerFiles = files.ToArray();
             if (_pickerFiles.Length == 0)
             {
-                _state.SetStatus("No model files found in: " + folder);
+                _state.SetStatus(T("status.noFilesFound", folder));
             }
             else
             {
-                _state.SetStatus("Found " + _pickerFiles.Length.ToString(CultureInfo.InvariantCulture) + " file(s).");
+                _state.SetStatus(T("status.filesFound", _pickerFiles.Length.ToString(CultureInfo.InvariantCulture)));
             }
         }
 
