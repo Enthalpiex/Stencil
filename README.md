@@ -6,7 +6,7 @@
 
 ## Description
 
-Stencil is a KSP editor addon that provides reference model visualization and advanced slicing capabilities for ship design analysis. Import 3D models (.STL, .OBJ, .FBX, .DAE) directly into the editor to overlay reference geometry for precise alignment and design verification.
+Stencil is a KSP editor addon that provides reference model visualization and advanced slicing capabilities for ship design analysis. Import 3D models (.STL, .OBJ) directly into the editor to overlay reference geometry for precise alignment and design verification.
 
 ## Compatibility
 
