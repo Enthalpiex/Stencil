@@ -39,6 +39,7 @@ RELEASE/
 # Debug logging
 Stencil/debug.txt
 KSP/Stencil/debug.txt
+UPDATELOG
 
 # OS-specific files
 .DS_Store
