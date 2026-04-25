@@ -1,6 +1,6 @@
 # Stencil
 
-<img width="1619" height="479" alt="Stencil-hero" src="https://github.com/user-attachments/assets/351d8f20-3de5-4864-991a-f4c9144caa4a" />
+<img alt="Stencil-hero" src="https://github.com/user-attachments/assets/351d8f20-3de5-4864-991a-f4c9144caa4a" />
 
 **Author:** Entropiex
 
